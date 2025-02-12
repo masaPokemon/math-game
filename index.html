@@ -3,15 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>数字つなげゲーム</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>数字を繋げて競うゲーム</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(6, 50px);
+            grid-template-rows: repeat(6, 50px);
+            gap: 5px;
+            justify-content: center;
+        }
+
+        .cell {
+            width: 50px;
+            height: 50px;
+            background-color: lightgray;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .highlight {
+            background-color: lightgreen;
+            border: 2px solid green;
+        }
+
+        .line {
+            position: absolute;
+            border: 2px solid green;
+            pointer-events: none;
+        }
+
+        .timer {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+
+        .score {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+
+    </style>
 </head>
 <body>
-    <h1>数字つなげゲーム</h1>
-    <div id="game-board"></div>
-    <div id="score">スコア: 0</div>
-    <div id="time">残り時間: 90秒</div>
-    <button id="start-button">ゲーム開始</button>
-    <script src="script.js"></script>
+
+<h1>数字を繋げて競うゲーム</h1>
+<p>90秒間でどれだけ数字を繋げられるかを競いましょう！</p>
+<div class="grid" id="grid"></div>
+<div class="score">スコア: <span id="score">0</span></div>
+<div class="timer">残り時間: <span id="time">90</span> 秒</div>
+
+<script>
+    const gridSize = 6;
+    let grid = [];
+    let score = 0;
+    let timeLeft = 90;
+    let timer;
+    let validConnections = ['24', '12']; // 繋げることのできる数字
+    let highlightedCells = []; // 繋げたセルの管理
+
+    // ランダムな数字を6x6のグリッドに埋める
+    function createGrid() {
+        const gridContainer = document.getElementById('grid');
+        grid = [];
+        gridContainer.innerHTML = '';
+
+        for (let row = 0; row < gridSize; row++) {
+            const rowCells = [];
+            for (let col = 0; col < gridSize; col++) {
+                const randomNum = Math.floor(Math.random() * 9) + 1;
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.textContent = randomNum;
+                cell.dataset.row = row;
+                cell.dataset.col = col;
+                cell.addEventListener('click', () => onCellClick(row, col));
+                gridContainer.appendChild(cell);
+                rowCells.push(cell);
+            }
+            grid.push(rowCells);
+        }
+    }
+
+    // セルがクリックされた時の処理
+    function onCellClick(row, col) {
+        const cell = grid[row][col];
+        if (highlightedCells.length > 0 && isAdjacent(cell, highlightedCells[highlightedCells.length - 1])) {
+            cell.classList.add('highlight');
+            highlightedCells.push(cell);
+            checkConnection();
+        } else if (highlightedCells.length === 0) {
+            cell.classList.add('highlight');
+            highlightedCells.push(cell);
+        }
+    }
+
+    // セルが隣接しているかを判定する
+    function isAdjacent(cell1, cell2) {
+        const row1 = parseInt(cell1.dataset.row);
+        const col1 = parseInt(cell1.dataset.col);
+        const row2 = parseInt(cell2.dataset.row);
+        const col2 = parseInt(cell2.dataset.col);
+
+        return Math.abs(row1 - row2) <= 1 && Math.abs(col1 - col2) <= 1;
+    }
+
+    // つながった数字をチェックする
+    function checkConnection() {
+        const connection = highlightedCells.map(cell => cell.textContent).join('');
+        if (validConnections.includes(connection)) {
+            score += connection.length;
+            document.getElementById('score').textContent = score;
+            highlightedCells.forEach(cell => cell.classList.remove('highlight'));
+            removeConnectedCells();
+            dropNewNumbers();
+        }
+    }
+
+    // つながったセルを削除する
+    function removeConnectedCells() {
+        highlightedCells.forEach(cell => {
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+            grid[row][col].textContent = '';
+        });
+        highlightedCells = [];
+    }
+
+    // 新しい数字を上から降ろす
+    function dropNewNumbers() {
+        for (let col = 0; col < gridSize; col++) {
+            for (let row = gridSize - 1; row >= 0; row--) {
+                if (!grid[row][col].textContent) {
+                    grid[row][col].textContent = Math.floor(Math.random() * 9) + 1;
+                }
+            }
+        }
+    }
+
+    // タイマーを開始する
+    function startTimer() {
+        timer = setInterval(() => {
+            timeLeft--;
+            document.getElementById('time').textContent = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                alert(`ゲーム終了！あなたのスコアは ${score} です！`);
+            }
+        }, 1000);
+    }
+
+    // ゲームの初期化
+    function initGame() {
+        createGrid();
+        startTimer();
+    }
+
+    // ゲーム開始
+    initGame();
+</script>
+
 </body>
 </html>
