@@ -101,9 +101,8 @@
 
     // ランダムに繋げるべき数字（例: 24 や 12）を生成
     function generateRandomConnection() {
-        const firstNum = Math.floor(Math.random() * 9) + 1;
-        const secondNum = Math.floor(Math.random() * 9) + 1;
-        validConnection = `${firstNum}${secondNum}`;
+        const firstNum = Math.floor(Math.random() * 12) + 12;
+        validConnection = `${firstNum}`;
         document.getElementById('target').textContent = validConnection;
     }
 
