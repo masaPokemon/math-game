@@ -2,6 +2,7 @@ let board = [];
 let score = 0;
 let timer;
 let timeLeft = 90;
+let math
 
 const startButton = document.getElementById("start-button");
 const gameBoard = document.getElementById("game-board");
@@ -17,6 +18,7 @@ function startGame() {
     updateBoard();
     updateScore();
     updateTime();
+    deleteMath();
     startTimer();
 }
 
@@ -33,6 +35,10 @@ function startTimer() {
 
 function updateTime() {
     timeDisplay.textContent = "残り時間: " + timeLeft + "秒";
+}
+
+function deleteMath() {
+    mathDisplay.textContent = "消す数字: " + math;
 }
 
 function createBoard() {
@@ -62,7 +68,7 @@ function updateBoard() {
 
 function handleCellClick(row, col) {
     const num = board[row][col];
-    if (num >= 12 && num <= 24) {  // つながる範囲の確認
+    if (num == math) {  // つながる範囲の確認
         score += num;  // 得点追加
         board[row][col] = 0;  // 数字を消去
         dropNewNumbers();  // 新しい数字を降らせる
