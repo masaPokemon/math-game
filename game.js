@@ -8,8 +8,6 @@ canvas.height = 400;
 const player1 = {
     x: 100,
     y: 300,
-    width: 50,
-    height: 100,
     color: 'blue',
     dx: 0,
     dy: 0,
@@ -18,14 +16,11 @@ const player1 = {
     health: 100,
     attack: { punch: false, kick: false, magic: false },
     isAttacking: false,
-    animationFrame: 0
 };
 
 const player2 = {
     x: 650,
     y: 300,
-    width: 50,
-    height: 100,
     color: 'red',
     dx: 0,
     dy: 0,
@@ -34,7 +29,6 @@ const player2 = {
     health: 100,
     attack: { punch: false, kick: false, magic: false },
     isAttacking: false,
-    animationFrame: 0
 };
 
 // キーの設定
@@ -55,10 +49,10 @@ const keys = {
 
 // 衝突判定
 function checkCollision(player1, player2) {
-    return !(player1.x + player1.width < player2.x || 
-             player1.x > player2.x + player2.width || 
-             player1.y + player1.height < player2.y || 
-             player1.y > player2.y + player2.height);
+    return !(player1.x + 20 < player2.x || 
+             player1.x > player2.x + 20 || 
+             player1.y + 100 < player2.y || 
+             player1.y > player2.y + 100);
 }
 
 // プレイヤーの攻撃処理
@@ -131,6 +125,43 @@ function drawHealthBar(player, x, y) {
     ctx.fillRect(x, y, 200 * (player.health / 100), 20); // ヘルスバー
 }
 
+// 棒人間の描画
+function drawStickFigure(player) {
+    // 頭
+    ctx.beginPath();
+    ctx.arc(player.x + 10, player.y - 10, 10, 0, Math.PI * 2); // 頭
+    ctx.fillStyle = player.color;
+    ctx.fill();
+    ctx.closePath();
+
+    // 体
+    ctx.beginPath();
+    ctx.moveTo(player.x + 10, player.y); // 体
+    ctx.lineTo(player.x + 10, player.y + 50);
+    ctx.strokeStyle = player.color;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    ctx.closePath();
+
+    // 腕
+    ctx.beginPath();
+    ctx.moveTo(player.x + 10, player.y + 10);
+    ctx.lineTo(player.x, player.y + 30); // 左腕
+    ctx.moveTo(player.x + 10, player.y + 10);
+    ctx.lineTo(player.x + 20, player.y + 30); // 右腕
+    ctx.stroke();
+    ctx.closePath();
+
+    // 足
+    ctx.beginPath();
+    ctx.moveTo(player.x + 10, player.y + 50);
+    ctx.lineTo(player.x, player.y + 70); // 左足
+    ctx.moveTo(player.x + 10, player.y + 50);
+    ctx.lineTo(player.x + 20, player.y + 70); // 右足
+    ctx.stroke();
+    ctx.closePath();
+}
+
 // プレイヤーのアニメーション
 function update() {
     handleAttacks();
@@ -174,13 +205,11 @@ function update() {
     // 描画
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // プレイヤー1の描画
-    ctx.fillStyle = player1.color;
-    ctx.fillRect(player1.x, player1.y, player1.width, player1.height);
+    // プレイヤー1の描画（棒人間）
+    drawStickFigure(player1);
 
-    // プレイヤー2の描画
-    ctx.fillStyle = player2.color;
-    ctx.fillRect(player2.x, player2.y, player2.width, player2.height);
+    // プレイヤー2の描画（棒人間）
+    drawStickFigure(player2);
 
     // ヘルスバーの描画
     drawHealthBar(player1, 10, 10);
