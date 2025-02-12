@@ -1,23 +1,348 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>格闘ゲーム</title>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>2048</title>
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background-color: #282828;
+        .panel {
+            display: flex;
+            flex-flow: row wrap;
+            width: 360px;
+            height: 360px;
+            padding: 15px;
+            background-color: #bbada0;
         }
-        canvas {
-            display: block;
-            margin: 0 auto;
+        .cell {
+            box-sizing: border-box;
+            width: 80px;
+            height: 80px;
+            line-height: 80px;
+            border-radius: 5px;
+            margin: 5px;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            background-color: #ccc0b2;
+            transition: all 0.3s ease;
         }
+
+        .val-2 {
+            background-color: #eee4da;
+            color: #766d64
+        }
+        .val-4 {
+            background-color: #ece0c8;
+            color: #786e65
+        }
+        .val-8 {
+            background-color: #f2b179;
+            color: #f5f5f5
+        }
+        .val-16 {
+            background-color: #f59563;
+            color: #f5f5f5
+        }
+        .val-32 {
+            background-color: #f47c5a;
+            color: #f5f5f5
+        }
+        .val-64 {
+            background-color: #fa5c3f;
+            color: #f5f5f5
+        }
+        .val-128 {
+            background-color: #efcd74;
+            color: #f5f5f5
+        }
+        .val-256 {
+            background-color: #edcc61;
+            color: #f5f5f5
+        }
+        .val-512 {
+            background-color: #ecc850;
+            color: #f5f5f5
+        }
+        .val-1024 {
+            background-color: #edc542;
+            color: #f5f5f5
+        }
+        .val-2048 {
+            background-color: #ecc400;
+            color: #f5f5f5
+        }
+        .val-4096 {
+            background-color: #ff3b3d;
+            color: #f5f5f5
+        }
+        .val-8192, .val-16384, .val-32768, .val-65536 {
+            font-size: 20px;
+            background-color: #fe1e1e;
+            color: #f5f5f5
+        }
+
+        .move-right-1 {
+            transform: translate(90px, 0px);
+        }
+
+        .move-right-2 {
+            transform: translate(180px, 0px);
+        }
+
+        .move-right-3 {
+            transform: translate(270px, 0px);
+        }
+
+        .move-left-1 {
+            transform: translate(-90px, 0px);
+        }
+
+        .move-left-2 {
+            transform: translate(-180px, 0px);
+        }
+
+        .move-left-3 {
+            transform: translate(-270px, 0px);
+        }
+        
+        .move-down-1 {
+            transform: translate(0px, 90px);
+        }
+
+        .move-down-2 {
+            transform: translate(0px, 180px);
+        }
+
+        .move-down-3 {
+            transform: translate(0px, 270px);
+        }
+
+        .move-up-1 {
+            transform: translate(0px, -90px);
+        }
+
+        .move-up-2 {
+            transform: translate(0px, -180px);
+        }
+
+        .move-up-3 {
+            transform: translate(0px, -270px);
+        }
+
     </style>
 </head>
+
 <body>
-    <canvas id="gameCanvas"></canvas>
-    <script src="game.js"></script>
+    <div class="panel">
+        <div class="cell r1 c1"></div>
+        <div class="cell r1 c2"></div>
+        <div class="cell r1 c3"></div>
+        <div class="cell r1 c4"></div>
+        <div class="cell r2 c1"></div>
+        <div class="cell r2 c2"></div>
+        <div class="cell r2 c3"></div>
+        <div class="cell r2 c4"></div>
+        <div class="cell r3 c1"></div>
+        <div class="cell r3 c2"></div>
+        <div class="cell r3 c3"></div>
+        <div class="cell r3 c4"></div>
+        <div class="cell r4 c1"></div>
+        <div class="cell r4 c2"></div>
+        <div class="cell r4 c3"></div>
+        <div class="cell r4 c4"></div>
+    </div>
 </body>
+<script>
+    function Node() {
+        this.status = false;
+        this.value = 0;
+    }
+    function GamePanel() {
+        dom_panel = document.querySelector('.panel')
+        this.arr = [];
+        this.size = 0;
+        this.GAMEOVERFLAG = false
+        this.downSide = [
+            [12, 8, 4, 0],
+            [13, 9, 5, 1],
+            [14, 10, 6, 2],
+            [15, 11, 7, 3]
+        ]
+        this.upSide = this.downSide.map(ele => ele.concat([]).reverse())
+        this.leftSide = [
+            [0, 1, 2, 3],
+            [4, 5, 6, 7],
+            [8, 9, 10, 11],
+            [12, 13, 14, 15]
+        ]
+        this.rightSide = this.leftSide.map(ele => ele.concat([]).reverse())
+
+        this.init = function (size) {
+            if (this.arr.length !== 0)
+                this.arr = []
+
+            for (let index = 0; index < size ** 2; index++) {
+                this.arr.push({
+                    status: false,
+                    value: 0
+                })
+            }
+
+            this.size = size
+        }
+
+        this.randGenerate = function (pieces) {
+            // console.time('generate pieces')
+            let cPieces = 0;
+            while (cPieces++ < pieces) {
+                let leftPieces = this.arr.map((ele, idx) => !ele.status ? idx : -1).filter(ele => ~ele)
+                if(leftPieces.length === 0) continue
+                let rand = Math.floor(Math.random() * Math.floor(leftPieces.length));
+                this.arr[leftPieces[rand]]['status'] = true
+                this.arr[leftPieces[rand]]['value'] = Math.random() < 0.8 ? 2 : 4
+            }
+            // console.timeEnd('generate pieces')
+        }
+
+        this.combine = function (arr) {
+            let farr = arr.filter(ele => ele),
+                res = []
+            if (farr.length < 2) {
+                res = farr
+            } else {
+                for (let i = 0; i <= farr.length - 1; i++) {
+                    if (farr[i] == farr[i + 1]) {
+                        res.push(farr[i] + farr[i + 1])
+                        i++
+                    } else {
+                        res.push(farr[i])
+                    }
+                }
+            }
+
+            return res.concat([0, 0, 0, 0]).slice(0, 4);
+        }
+
+        this.move = function (sideArr, panelArr) {
+            sideArr.forEach(ele => {
+                let temp = []
+                ele.forEach(idx => {
+                    temp.push(panelArr[idx]['value'])
+                })
+                temp = this.combine(temp)
+                ele.forEach((idx, index) => {
+                    panelArr[idx]['status'] = !!temp[index]
+                    panelArr[idx]['value'] = ~~temp[index]
+                })
+            })
+            return panelArr
+        }
+
+        this.keyEvent = function (sideArr) {
+            this.arr = this.move(sideArr, this.arr)
+            this.judge()
+            this.print()
+            this.paint()
+        }
+
+        this.keyup = function () {
+            this.keyEvent(this.upSide)
+        }
+
+        this.keyright = function () {
+            this.keyEvent(this.rightSide)
+        }
+
+        this.keydown = function () {
+            this.keyEvent(this.downSide)
+        }
+
+        this.keyleft = function () {
+            this.keyEvent(this.leftSide)
+        }
+
+        this.print = function () {
+            let printStr = ''
+            for (let i = 0; i < this.size; i++) {
+                for (let j = 0; j < this.size; j++) {
+                    printStr += this.arr[i * this.size + j]['value'] + ' '
+                }
+                printStr += '\r\n'
+            }
+            console.log(printStr)
+        }
+
+        this.paint = function () {
+            dom_panel.querySelectorAll('.cell').forEach((node, idx) => {
+                node.classList.remove('val-' + node.innerHTML)
+                node.classList.add('val-' + this.arr[idx]['value'])
+                node.innerHTML = this.arr[idx]['value'] ? this.arr[idx]['value'] : ''
+            });
+        }
+
+        this.judge = function () {
+            if (this.arr.length == this.arr.filter(ele => ele.status).length) {
+                let tempArr = this.arr.slice(0)
+                if (
+                    (   this.move(this.upSide, tempArr).map(ele => ele.value).join(",")
+                    === this.move(this.rightSide, tempArr).map(ele => ele.value).join(","))
+                    && 
+                    (   this.move(this.rightSide, tempArr).map(ele => ele.value).join(",")
+                    === this.move(this.downSide, tempArr).map(ele => ele.value).join(","))
+                    &&
+                    (
+                        this.move(this.downSide, tempArr).map(ele => ele.value).join(",")
+                    === this.move(this.leftSide, tempArr).map(ele => ele.value).join(","))
+                )
+                    this.GAMEOVERFLAG = true;
+            }
+
+            if (this.GAMEOVERFLAG) {
+                if (confirm('Game Over!\r\nDo you want to restart?')) {
+                    this.test();
+                }
+            } else {
+                this.randGenerate(2)
+            }
+
+        }
+
+        this.test = function () {
+            this.init(4)
+            this.randGenerate(10)
+            this.paint()
+            // this.keyup()
+            // this.keyleft()
+            // this.keydown()
+        }
+
+        return this;
+    }
+    window.panel = new GamePanel();
+    document.onkeyup = function () {
+        var keycode = event.which || event.keyCode;
+        switch (keycode) {
+
+            case 37: 
+                console.log('left')
+                panel.keyleft();
+                break;
+            case 38: 
+                console.log('up')
+                panel.keyup()
+                break;
+            case 39: 
+                console.log('right')
+                panel.keyright()
+                break;
+            case 40: 
+                console.log('down')
+                panel.keydown()
+                break;
+        }  
+    }
+</script>
+
 </html>
